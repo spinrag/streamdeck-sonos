@@ -2,6 +2,9 @@
  * @class StreamDeck
  * StreamDeck object containing all required code to establish
  * communication with SD-Software and the Property Inspector
+ * 
+ * UPDATE 1: updated with events to support StreamDeck+ (dialDown, dialRotate, dialUp, touchTap)
+ * UPDATE 2: added support for unique sonos device per button/action
  */
 class StreamDeck {
     port;
@@ -126,6 +129,35 @@ class StreamDeck {
                 console.log('WEBSOCKET EXCEPTION:', e);
             }
         }
+    }
+
+    /**
+     * Send JSON payload to StreamDeck
+     * @param {string} context
+     * @param {string} event
+     * @param {object} [payload]
+     */
+    sendSDK(context, event, payload = {}) {
+        this.websocket && this.websocket.send(JSON.stringify({context, event, ...payload}));
+    }
+
+    /**
+	 * Set the properties of the layout on the Stream Deck + touch display
+	 * @param {*} context
+	 * @param {*} payload
+	 */
+	setFeedback(context, payload) {
+		if (!context) {
+			console.error('A context is required for setFeedback.');
+		}
+
+		this.sendSDK(context, Events.setFeedback, {
+			payload,
+		});
+	}
+
+    sendMessage(json) {
+        this.websocket.send(JSON.stringify(json));
     }
 
     /**
@@ -410,9 +442,13 @@ class Action {
         this.context = context;
 
         //action events
+        this.streamDeck.on(`${this.action}.dialDown`, (event) => this.onDialDown(event));
+        this.streamDeck.on(`${this.action}.dialRotate`, (event) => this.onDialRotate(event));
+        this.streamDeck.on(`${this.action}.dialUp`, (event) => this.onDialUp(event));
         this.streamDeck.on(`${this.action}.didReceiveSettings`, (event) => this.onDidReceiveSettings(event));
         this.streamDeck.on(`${this.action}.keyDown`, (event) => this.onKeyDown(event));
         this.streamDeck.on(`${this.action}.keyUp`, (event) => this.onKeyUp(event));
+        this.streamDeck.on(`${this.action}.touchTap`, (event) => this.onTouchTap(event));
         this.streamDeck.on(`${this.action}.willAppear`, (event) => this.onWillAppear(event));
         this.streamDeck.on(`${this.action}.willDisappear`, (event) => this.onWillDisappear(event));
         this.streamDeck.on(`${this.action}.titleParametersDidChange`, (event) => this.onTitleParametersDidChange(event));
@@ -429,6 +465,27 @@ class Action {
             .onApplicationDidLaunch((event) => this.onApplicationDidLaunch(event))
             .onApplicationDidTerminate((event) => this.onApplicationDidTerminate(event))
             .onSystemDidWakeUp((event) => this.onSystemDidWakeUp(event));
+    }
+
+    /**
+     * Callback function for the dialDown event, which fires when pushing a knob in
+     */
+    async onDialDown(event) {
+        console.log('onDialDown', event)
+    }
+
+    /**
+     * Callback function for the dialRotate event, which fires when twisting a knob
+     */
+    async onDialRotate(event) {
+        console.log('onDialRotate', event)
+    }
+
+    /**
+     * Callback function for the dialUp event, which fires when releasing a knob after pushing the knob in
+     */
+    async onDialUp(event) {
+        console.log('onDialUp', event)
     }
 
     /**
@@ -456,9 +513,35 @@ class Action {
     }
 
     /**
+     * Callback function for the touchTap event, which fires when touching or tapping the display on the SD+
+     */
+    async onTouchTap(event) {
+        console.log('onTouchTap')
+    }
+
+    /**
      * Callback function for the willAppear event, which fires when an action appears on they key
      */
     async onWillAppear(event) {
+        const sonosHost = event.payload.settings.actionHost
+        if (!this.sonosList[sonosHost] && !this.sonosList[sonosHost]?.isConnected()) {
+            this.sonosList[sonosHost] = new Sonos();
+            this.sonosList[sonosHost].connect(sonosHost, 1400);
+        }
+        const {CurrentVolume: volume} = await this.sonosList[sonosHost].getVolume();
+        const indicator = {
+            value: volume,
+            opacity: 1,
+            bar_bg_c: null
+        }
+
+        const payload = {
+            // title: title,
+            value: volume + '%',
+            indicator
+            // icon
+        };
+        this.streamDeck.setFeedback(event.context, payload)
     }
 
     /**
@@ -477,12 +560,33 @@ class Action {
      * Callback function for the deviceDidConnect event, which fires when a device is plugged in
      */
     async onDeviceDidConnect(event) {
+        console.log('onDeviceDidConnect', event)
+        const sonosHost = event.payload.settings.actionHost
+        if (!this.sonosList[sonosHost] && !this.sonosList[sonosHost]?.isConnected()) {
+            this.sonosList[sonosHost] = new Sonos();
+            this.sonosList[sonosHost].connect(sonosHost, 1400);
+        }
+        const {CurrentVolume: volume} = await this.sonosList[sonosHost].getVolume();
+        const indicator = {
+            value: volume,
+            opacity: 1,
+            bar_bg_c: null
+        }
+
+        const payload = {
+            // title: title,
+            value: volume + '%',
+            indicator
+            // icon
+        };
+        this.streamDeck.setFeedback(event.context, payload)
     }
 
     /**
      * Callback function for the deviceDidDisconnect event, which fires when a device is unplugged
      */
     async onDeviceDidDisconnect(event) {
+        console.log('onDeviceDidDisconnect', event)
     }
 
     /**

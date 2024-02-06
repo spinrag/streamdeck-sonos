@@ -5,8 +5,8 @@
   "Description": "Control your Sonos Speakers.",
   "Name": "Sonos",
   "Icon": "sonos",
-  "URL": "https://github.com/GenericMale/streamdeck-spotify",
-  "Version": "1.0.0",
+  "URL": "https://github.com/ChrisOgden/streamdeck-sonos",
+  "Version": "1.0.7",
   "Category": "Sonos",
   "CategoryIcon": "images/plugin_category",
   "PropertyInspectorPath": "pi/index.html",
@@ -176,6 +176,28 @@
       ],
       "Tooltip": "Mute and unmute the audio.",
       "UUID": "com.genericmale.sonos.mute"
+    },
+    {
+      "Icon": "images/volume_action",
+      "Name": "Adjust volume",
+      "States": [
+        {
+          "Image": "images/volume_action"
+        }
+      ],
+      "Controllers": [
+        "Encoder"
+      ],
+      "Encoder": {
+        "Icon": "images/volume_action",
+        "layout": "$B1",
+        "TriggerDescription": {
+          "Rotate": "Adjust volume",
+          "Push": "Mute on/off"
+        }
+      },
+      "Tooltip": "Adjust the volume of your Sonos.",
+      "UUID": "com.genericmale.sonos.adjustvolume"
     },
     {
       "Icon": "images/volume_action",

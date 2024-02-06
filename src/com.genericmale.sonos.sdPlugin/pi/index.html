@@ -23,13 +23,15 @@
 <div class="sdpi-wrapper">
 
     <form id="global-settings">
-        <div class="sdpi-item">
+        <!-- This was used as a global plugin setting when only a single sonos was connected, -->
+        <!-- <div class="sdpi-item">
             <div class="sdpi-item-label" data-localize>Speaker IP</div>
             <input class="sdpi-item-value" name="host" type="text"/>
-        </div>
+        </div> -->
 
         <div class="sdpi-item">
-            <details class="message info">
+            <div class="sdpi-item-label info"></div>
+            <details class="message">
                 <summary data-localize>Obtaining Speaker IP Address</summary>
                 <h4 data-localize>Sonos Desktop App</h4>
                 <i data-localize>Help -> About My Sonos System...</i>
@@ -42,9 +44,21 @@
     <hr>
 
     <form id="settings">
+        <div class="sdpi-item active" data-actions="adjustvolume,next">
+            <div class="sdpi-item-label">Speaker IP <br/>for Action</div>
+            <input class="sdpi-item-value" name="actionHost" type="text"/>
+        </div>
+
         <div class="sdpi-item" data-actions="mute,playpause,repeat,shuffle">
             <div class="sdpi-item-label" data-localize>Refresh Interval</div>
             <input class="sdpi-item-value" name="refreshInterval" type="number" value="1"/>
+        </div>
+
+        <div type="range" class="sdpi-item" data-actions="adjustvolume">
+            <div class="sdpi-item-label" data-localize>Sonos volume</div>
+            <div class="sdpi-item-value">
+                <input type="range" min="0" max="100" name="volume" value="20"/>
+            </div>
         </div>
 
         <div class="sdpi-item" data-actions="volume">
@@ -148,7 +162,8 @@
         </div>
 
         <div class="sdpi-item" data-actions="playuri">
-            <details class="message info">
+            <div class="sdpi-item-label info"></div>
+            <details class="message">
                 <summary>Supported Music Services</summary>
                 <p title="https://open.spotify.com/playlist/37i9dQZEVXcQ9COmYvdajy">Spotify</p>
                 <p title="https://tidal.com/browse/playlist/915bb231-f7f6-4e3c-91a7-d7de0921cbc7">Tidal</p>

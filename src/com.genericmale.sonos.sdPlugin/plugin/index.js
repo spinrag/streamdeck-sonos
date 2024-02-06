@@ -9,13 +9,16 @@
  */
 function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, info, actionInfo) {
     const sonos = new Sonos();
+    const sonosList = {}
 
     const streamDeck = new StreamDeck();
     streamDeck.connect(port, pluginUUID, registerEvent, info, actionInfo);
     streamDeck.onConnected(() => {
-        streamDeck.getGlobalSettings().then((settings) => {
-            sonos.connect(settings.host, parseInt(settings.port) || 1400);
-        });
+        console.debug('streamDeck.onConnected')
+        // This was use when there was a single global setting and singular sonos device
+        // streamDeck.getGlobalSettings().then((settings) => {
+        //     sonos.connect(settings.host, parseInt(settings.port) || 1400);
+        // });
     })
 
     //load action implementations dynamically when the action becomes visible
@@ -31,6 +34,11 @@ function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, info, ac
             loadedScripts[script.src] = {name: event.action, context: event.context};
             document.documentElement.firstChild.appendChild(script);
         }
+        const sonosHost = event.payload.settings.actionHost
+        if (!sonosList[sonosHost] && !sonosList[sonosHost]?.isConnected()) {
+            sonosList[sonosHost] = new Sonos();
+            sonosList[sonosHost].connect(sonosHost, 1400);
+        }
     });
 
     //action classes need to be registered using a call to define
@@ -39,6 +47,7 @@ function connectElgatoStreamDeckSocket(port, pluginUUID, registerEvent, info, ac
         const action = loadedScripts[scriptSrc];
         action.instance = new actionClass(streamDeck, action.name, action.context);
         action.instance.sonos = sonos;
+        action.instance.sonosList = sonosList;
     }
 }
 
